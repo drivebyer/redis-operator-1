@@ -1,6 +1,10 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
-delete:
-  - apiVersion: redis.redis.opstreelabs.in/v1beta1
-    kind: Redis
-    name: redis-standalone
+commands:
+  - command: kubectl get redis -n ot-container -o yaml
+  - command: kubectl get statefulset -n ot-container -o yaml
+  - command: kubectl get pod -n ot-container -o yaml
+  - command: kubectl get service -n ot-container -o yaml
+  - command: kubectl get configmap -n ot-container -o yaml
+  - command: kubectl get secret -n ot-container -o yaml
+  - command: kubectl get pvc -n ot-container -o yaml

@@ -1,7 +1,18 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: Redis
+metadata:
+  name: redis-standalone
+  finalizers:
+    - redisFinalizer
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis-standalone
+  labels:
+    app: redis-standalone
+    redis_setup_type: standalone
+    role: standalone
 status:
   replicas: 1
   readyReplicas: 1
