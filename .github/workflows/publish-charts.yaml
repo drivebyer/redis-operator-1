@@ -56,7 +56,7 @@ jobs:
           # GitHub repository
           CR_GIT_REPO: "helm-charts"
           # Path to directory with chart packages (default ".cr-release-packages")
-          CR_PACKAGE_PATH: "_output/release/chart/"
+          CR_PACKAGE_PATH: ".cr-release-packages"
           # use token for helm-charts repo
           CR_TOKEN: "${{ secrets.HELM_CHARTER_TOKEN }}"
           # owner
