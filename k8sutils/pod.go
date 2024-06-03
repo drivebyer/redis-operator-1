@@ -14,6 +14,7 @@ import (
 )
 
 type Pod interface {
+	GetPod(ctx context.Context, namespace string, name string) (*corev1.Pod, error)
 	ListPods(ctx context.Context, namespace string, labels map[string]string) (*corev1.PodList, error)
 	PatchPodLabels(ctx context.Context, namespace, name string, labels map[string]string) error
 }
@@ -29,6 +30,10 @@ func NewPodService(kubeClient kubernetes.Interface, log logr.Logger) *PodService
 		kubeClient: kubeClient,
 		log:        log,
 	}
+}
+
+func (s *PodService) GetPod(ctx context.Context, namespace string, name string) (*corev1.Pod, error) {
+	return s.kubeClient.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func (s *PodService) ListPods(ctx context.Context, namespace string, labels map[string]string) (*corev1.PodList, error) {

@@ -9281,6 +9281,8 @@ spec:
           status:
             description: RedisStatus defines the observed state of Redis
             properties:
+              masterIP:
+                type: string
               masterNode:
                 type: string
             type: object

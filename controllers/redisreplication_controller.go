@@ -105,14 +105,16 @@ func (r *RedisReplicationReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 func (r *RedisReplicationReconciler) UpdateRedisReplicationMaster(ctx context.Context, instance *redisv1beta2.RedisReplication, masterNode string) error {
-	if instance.Status.MasterNode == masterNode {
+	masterPod, err := r.GetPod(ctx, instance.GetNamespace(), masterNode)
+	if err != nil {
+		return err
+	}
+	if instance.Status.MasterIP == masterPod.Status.PodIP && instance.Status.MasterNode == masterNode {
 		return nil
 	}
 	instance.Status.MasterNode = masterNode
-	if err := r.Client.Status().Update(ctx, instance); err != nil {
-		return err
-	}
-	return nil
+	instance.Status.MasterIP = masterPod.Status.PodIP
+	return r.Client.Status().Update(ctx, instance)
 }
 
 func (r *RedisReplicationReconciler) UpdateRedisPodRoleLabel(ctx context.Context, cr *redisv1beta2.RedisReplication, masterNode string) error {

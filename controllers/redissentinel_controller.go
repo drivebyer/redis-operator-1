@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"time"
 
 	redisv1beta2 "github.com/OT-CONTAINER-KIT/redis-operator/api/v1beta2"
@@ -90,9 +92,12 @@ func (r *RedisSentinelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&redisv1beta2.RedisSentinel{}).
 		Watches(&redisv1beta2.RedisReplication{}, &handler.Funcs{
 			CreateFunc: nil,
-			UpdateFunc: func(ctx context.Context, event event.UpdateEvent, limitingInterface workqueue.RateLimitingInterface) {
-				_ = event.ObjectNew.GetName()
-				_ = event.ObjectNew.GetNamespace()
+			UpdateFunc: func(ctx context.Context, event event.UpdateEvent, queue workqueue.RateLimitingInterface) {
+				_, ok := event.ObjectNew.(*redisv1beta2.RedisReplication)
+				if ok {
+					queue.Get()
+					queue.Add(reconcile.Request{NamespacedName: types.NamespacedName{}})
+				}
 			},
 			DeleteFunc:  nil,
 			GenericFunc: nil,
