@@ -541,8 +541,18 @@ func getContainerID(ctx context.Context, client kubernetes.Interface, cr *rcvb2.
 func checkRedisNodePresence(ctx context.Context, cr *rcvb2.RedisCluster, nodeList []clusterNodesResponse, nodeName string) bool {
 	log.FromContext(ctx).V(1).Info("Checking if Node is in cluster", "Node", nodeName)
 	for _, node := range nodeList {
-		s := strings.Split(node[1], ":")
-		if s[0] == nodeName {
+		addrField := node[1]
+		if idx := strings.Index(addrField, ","); idx != -1 {
+			addrField = addrField[:idx]
+		}
+		if at := strings.Index(addrField, "@"); at != -1 {
+			addrField = addrField[:at]
+		}
+		host, _, err := net.SplitHostPort(addrField)
+		if err != nil {
+			host = addrField
+		}
+		if host == nodeName {
 			return true
 		}
 	}

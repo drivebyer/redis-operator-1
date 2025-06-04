@@ -34,6 +34,16 @@ func TestCheckRedisNodePresence(t *testing.T) {
 		nodes = append(nodes, node)
 	}
 
+	ipv6Output := "abcd [2001:db8::1]:6379@16379,hostv6 master - 0 1 1 connected"
+	csvOutputV6 := csv.NewReader(strings.NewReader(ipv6Output))
+	csvOutputV6.Comma = ' '
+	csvOutputV6.FieldsPerRecord = -1
+	rawNodesV6, _ := csvOutputV6.ReadAll()
+	nodesV6 := make([]clusterNodesResponse, 0, len(rawNodesV6))
+	for _, node := range rawNodesV6 {
+		nodesV6 = append(nodesV6, node)
+	}
+
 	tests := []struct {
 		nodes []clusterNodesResponse
 		ip    string
@@ -42,6 +52,7 @@ func TestCheckRedisNodePresence(t *testing.T) {
 		{nodes, "172.17.0.24", true},
 		{nodes, "172.17.0.111", false},
 		{nodes, "172.17.0.2", false},
+		{nodesV6, "2001:db8::1", true},
 	}
 
 	for _, tt := range tests {
