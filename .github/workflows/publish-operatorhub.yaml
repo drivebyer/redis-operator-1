@@ -1,0 +1,67 @@
+name: Publish OperatorHub Bundle
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    if: github.repository_owner == 'OT-CONTAINER-KIT'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set VERSION
+        id: vars
+        run: |
+          version=$(grep '^VERSION' Makefile | awk '{print $3}')
+          echo "VERSION=$version" >> $GITHUB_OUTPUT
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.21
+
+      - name: Install operator-sdk
+        run: |
+          curl -L https://github.com/operator-framework/operator-sdk/releases/download/v1.32.0/operator-sdk_linux_amd64 -o operator-sdk
+          chmod +x operator-sdk
+          sudo mv operator-sdk /usr/local/bin/
+
+      - name: Install kustomize
+        run: |
+          curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.6.0/kustomize_v5.6.0_linux_amd64.tar.gz | tar -xz
+          chmod +x kustomize
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Generate bundle
+        run: make bundle
+
+      - name: Clone community-operators
+        uses: actions/checkout@v4
+        with:
+          repository: operator-framework/community-operators
+          token: ${{ secrets.COMMUNITY_OPERATORS_TOKEN }}
+          path: community-operators
+          fetch-depth: 0
+
+      - name: Copy bundle to community operators
+        run: |
+          VERSION="${{ steps.vars.outputs.VERSION }}"
+          DEST=community-operators/operators/redis-operator/$VERSION
+          mkdir -p "$DEST"
+          cp -R bundle/* "$DEST/"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          path: community-operators
+          commit-message: "redis-operator ${{ steps.vars.outputs.VERSION }}"
+          branch: "redis-operator-${{ steps.vars.outputs.VERSION }}"
+          title: "redis-operator ${{ steps.vars.outputs.VERSION }}"
+          body: "Publish redis-operator version ${{ steps.vars.outputs.VERSION }} to OperatorHub"
+          token: ${{ secrets.COMMUNITY_OPERATORS_TOKEN }}
